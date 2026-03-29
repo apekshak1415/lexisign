@@ -1,0 +1,33 @@
+# Virtual environment
+isl_env/
+
+# Large data files
+data/own_word_landmarks.pkl
+data/own_letter_landmarks.pkl
+data/letter_landmarks.pkl
+data/word_landmarks.pkl
+
+# Trained models
+models/letter_model.h5
+models/word_model.h5
+models/hand_landmarker.task
+
+# Plots
+models/*.png
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# VS Code
+.vscode/
+
+# Windows
+Thumbs.db
+desktop.ini
+
+data/letters/
+data/own_letters/
+data/words/
+data/
