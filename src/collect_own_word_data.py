@@ -11,7 +11,7 @@ WORDS = [
     "NO", "FOOD", "WATER", "GOOD", "MY NAME",
     "GOODBYE", "GOOD MORNING", "GOOD AFTERNOON", "GOOD EVENING",
     "HOW ARE YOU", "I AM FINE", "NICE TO MEET YOU",
-    "EXCUSE ME", "WELCOME", "I LOVE YOU"
+    "SEE YOU LATER", "WELCOME", "I LOVE YOU", "GOOD NIGHT", "WHAT","WHERE","HOW","WHEN"
 ]
 FRAMES_PER_CLIP  = 30      # frames captured per sign recording
 CLIPS_PER_WORD   = 30      # how many times you sign each word

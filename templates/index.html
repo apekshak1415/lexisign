@@ -58,19 +58,19 @@
         </button>
       </div>
 
-      <div class="model-badge" id="modelBadge">
+      <div class="model-badge">
         <span class="badge-dot"></span>
-        <span id="badgeText"
-          >Model ready ({{ letter_classes }}L / {{ word_classes }}W)</span
-        >
+        <span>Model ready ({{ letter_classes }}L / {{ word_classes }}W)</span>
       </div>
     </nav>
 
-    <!-- ── INTERPRETER TAB ──────────────────────────────────── -->
+    <!-- ════════════════════════════════════════════════════════
+     INTERPRETER TAB
+═════════════════════════════════════════════════════════ -->
     <div class="tab-content active" id="tab-interpreter">
       <div class="interpreter-layout">
-        <!-- Camera area -->
-        <div class="camera-section">
+        <!-- Left: camera -->
+        <div class="camera-col">
           <div class="camera-wrap" id="cameraWrap">
             <img
               id="videoFeed"
@@ -103,10 +103,14 @@
               <p>Start camera to begin</p>
             </div>
 
-            <!-- Overlay UI on camera -->
+            <!-- Camera overlay — pointer-events:none so it doesn't block clicks -->
             <div class="cam-overlay" id="camOverlay" style="display: none">
               <div class="overlay-top">
-                <div class="detection-badge" id="detectionBadge"></div>
+                <div
+                  class="detection-badge"
+                  id="detectionBadge"
+                  style="display: none"
+                ></div>
                 <div
                   class="hold-bar-wrap"
                   id="holdBarWrap"
@@ -118,14 +122,19 @@
                   <span class="hold-label">HOLD</span>
                 </div>
               </div>
-
               <div class="overlay-bottom">
-                <!-- Sentence display -->
                 <div class="sentence-display">
                   <span class="sentence-label">SENTENCE</span>
                   <span class="sentence-text" id="sentenceText">—</span>
                 </div>
-                <!-- Translated -->
+                <div
+                  class="final-display"
+                  id="finalDisplay"
+                  style="display: none"
+                >
+                  <span class="sentence-label" id="nlpLabel">✦ NLP</span>
+                  <span class="sentence-text" id="finalText"></span>
+                </div>
                 <div
                   class="translated-display"
                   id="translatedDisplay"
@@ -134,60 +143,58 @@
                   <span class="sentence-label" id="translatedLang">HI</span>
                   <span class="sentence-text" id="translatedText"></span>
                 </div>
-                <!-- Final corrected -->
-                <div
-                  class="final-display"
-                  id="finalDisplay"
-                  style="display: none"
-                >
-                  <span class="sentence-label">✦ NLP</span>
-                  <span class="sentence-text" id="finalText"></span>
-                </div>
               </div>
             </div>
           </div>
 
-          <!-- Spelling bar below camera -->
-          <div class="spell-bar" id="spellBar" style="display: none">
+          <!-- Word suggestions bar — OUTSIDE overlay so clicks work -->
+          <div class="word-sug-bar" id="wordSugBar" style="display: none">
+            <span class="sentence-label">PICK</span>
+            <div class="word-sug-btns" id="wordSugBtns"></div>
+            <span class="sug-hint">or keep signing</span>
+          </div>
+
+          <!-- Spelling bar -->
+          <div class="spell-bar">
             <span class="spell-label">SPELLING</span>
             <span class="spell-word" id="spellWord">_</span>
             <div class="suggestions" id="suggestions"></div>
           </div>
         </div>
 
-        <!-- Side panel -->
+        <!-- Right: controls -->
         <div class="side-panel">
           <!-- Camera control -->
           <div class="panel-card">
             <div class="card-title">CAMERA CONTROL</div>
             <button class="btn-primary" id="btnCamera" onclick="toggleCamera()">
               <svg
-                width="16"
-                height="16"
-                viewBox="0 0 16 16"
+                width="14"
+                height="14"
+                viewBox="0 0 14 14"
                 fill="currentColor"
               >
-                <path d="M6 4l6 4-6 4V4z" />
+                <path d="M4 3l7 4-7 4V3z" />
               </svg>
               Start Camera
             </button>
             <button class="btn-secondary" onclick="sendAction('clear')">
               <svg
-                width="14"
-                height="14"
-                viewBox="0 0 14 14"
+                width="12"
+                height="12"
+                viewBox="0 0 12 12"
                 fill="none"
                 stroke="currentColor"
                 stroke-width="1.5"
               >
-                <path d="M2 2l10 10M12 2L2 12" />
+                <path d="M2 2l8 8M10 2L2 10" />
               </svg>
               Clear Sentence
             </button>
           </div>
 
-          <!-- Mode & Language -->
-          <div class="panel-card" id="controlsCard" style="display: none">
+          <!-- Controls (shown after camera on) -->
+          <div class="panel-card">
             <div class="card-title">CONTROLS</div>
             <div class="mode-toggle">
               <button
@@ -220,7 +227,11 @@
               <button class="action-btn" onclick="sendAction('backspace')">
                 <kbd>⌫</kbd> Undo
               </button>
-              <button class="action-btn speak" onclick="sendAction('generate')">
+              <button
+                class="action-btn speak"
+                id="btnSpeak"
+                onclick="sendAction('generate')"
+              >
                 <svg
                   width="14"
                   height="14"
@@ -235,7 +246,7 @@
                     fill="none"
                   />
                 </svg>
-                Speak Sentence
+                <span id="speakLabel">Speak Sentence</span>
               </button>
             </div>
           </div>
@@ -252,7 +263,7 @@
                 </div>
               </div>
             </div>
-            <div class="status-item" id="wordStatus">
+            <div class="status-item">
               <div class="status-icon ok">✓</div>
               <div>
                 <div class="status-title">Word Model Loaded</div>
@@ -272,73 +283,129 @@
           </div>
 
           <!-- How it works -->
-          <div class="panel-card how-card">
+          <div class="panel-card">
             <div class="card-title">HOW IT WORKS</div>
             <ol class="how-list">
-              <li>Start the camera above</li>
-              <li>
-                Switch to <strong>LETTER</strong> or <strong>WORD</strong> mode
-              </li>
-              <li>Sign — letters auto-add after a steady hold</li>
-              <li>Press <strong>Confirm Word</strong> or pick a suggestion</li>
-              <li>
-                Press <strong>Speak</strong> to translate & hear the sentence
-              </li>
+              <li>Click Start Camera</li>
+              <li>Switch to Letter or Word mode</li>
+              <li>Sign — letters auto-add on steady hold</li>
+              <li>Press Confirm Word or pick a suggestion</li>
+              <li>Press Speak to translate and hear</li>
             </ol>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- ── COLLECT DATA TAB ─────────────────────────────────── -->
+    <!-- ════════════════════════════════════════════════════════
+     COLLECT DATA TAB
+═════════════════════════════════════════════════════════ -->
     <div class="tab-content" id="tab-collect">
       <div class="collect-layout">
+        <!-- Left: word list -->
         <div class="word-list-panel">
           <div class="panel-header">SELECT SIGN TO RECORD</div>
-          <div id="wordGroups">
-            <div class="loading-hint">Loading word list...</div>
+          <div class="word-groups-scroll" id="wordGroups">
+            <div class="loading-hint">Loading...</div>
           </div>
         </div>
-        <div class="record-panel">
-          <div class="record-placeholder" id="recordPlaceholder">
-            <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
-              <rect width="56" height="56" rx="16" fill="#1a1a2e" />
-              <path
-                d="M14 20h4l3-4h10l3 4h4a2 2 0 012 2v18a2 2 0 01-2 2H14a2 2 0 01-2-2V22a2 2 0 012-2z"
-                stroke="#444"
-                stroke-width="1.5"
-                fill="none"
-              />
-              <circle cx="28" cy="31" r="6" stroke="#444" stroke-width="1.5" />
-            </svg>
-            <p>Select a sign and start recording</p>
-            <p class="hint-sub">
-              Run <code>python src/collect_own_word_data.py</code> in terminal
-            </p>
+
+        <!-- Right: camera + controls -->
+        <div class="collect-right">
+          <!-- Camera -->
+          <div class="collect-camera-wrap" id="collectCameraWrap">
+            <img
+              id="collectFeed"
+              src=""
+              style="
+                display: none;
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                border-radius: 12px;
+              "
+            />
+            <div class="collect-placeholder" id="collectPlaceholder">
+              <svg width="48" height="48" viewBox="0 0 56 56" fill="none">
+                <rect width="56" height="56" rx="16" fill="#1a1a2e" />
+                <path
+                  d="M14 20h4l3-4h10l3 4h4a2 2 0 012 2v18a2 2 0 01-2 2H14a2 2 0 01-2-2V22a2 2 0 012-2z"
+                  stroke="#444"
+                  stroke-width="1.5"
+                  fill="none"
+                />
+                <circle
+                  cx="28"
+                  cy="31"
+                  r="6"
+                  stroke="#444"
+                  stroke-width="1.5"
+                />
+              </svg>
+              <p>Select a sign to start collecting</p>
+            </div>
+          </div>
+
+          <!-- Collect controls (shown after word selected) -->
+          <div
+            class="collect-controls"
+            id="collectControls"
+            style="display: none"
+          >
+            <div class="collect-info">
+              <div class="collect-word-name" id="collectWordName">—</div>
+              <div class="collect-progress-row">
+                <div class="collect-progress-bar">
+                  <div class="collect-progress-fill" id="collectFill"></div>
+                </div>
+                <span class="collect-count" id="collectCount">0 / 30</span>
+              </div>
+              <div class="collect-status-txt" id="collectStatusTxt">
+                Click Record to start
+              </div>
+            </div>
+            <div class="collect-btns">
+              <button class="btn-record" id="btnRecord" onclick="recordClip()">
+                <span class="rec-dot"></span> Record Clip
+              </button>
+              <button
+                class="btn-save"
+                id="btnSave"
+                onclick="saveClips()"
+                style="display: none"
+              >
+                💾 Save to Dataset
+              </button>
+              <button class="btn-stop-collect" onclick="stopCollect()">
+                ✕ Cancel
+              </button>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- ── TRAIN MODEL TAB ──────────────────────────────────── -->
+    <!-- ════════════════════════════════════════════════════════
+     TRAIN MODEL TAB
+═════════════════════════════════════════════════════════ -->
     <div class="tab-content" id="tab-train">
       <div class="train-layout">
         <div class="train-stats-row">
           <div class="stat-card">
             <div class="stat-num" id="statLetters">{{ letter_classes }}</div>
-            <div class="stat-label">Letter Classes</div>
+            <div class="stat-label">LETTER CLASSES</div>
           </div>
           <div class="stat-card">
             <div class="stat-num" id="statWords">{{ word_classes }}</div>
-            <div class="stat-label">Word Classes</div>
+            <div class="stat-label">WORD CLASSES</div>
           </div>
           <div class="stat-card">
             <div class="stat-num green">100%</div>
-            <div class="stat-label">Word Accuracy</div>
+            <div class="stat-label">WORD ACCURACY</div>
           </div>
           <div class="stat-card">
             <div class="stat-num green">98-100%</div>
-            <div class="stat-label">Letter Accuracy</div>
+            <div class="stat-label">LETTER ACCURACY</div>
           </div>
         </div>
 
@@ -351,19 +418,20 @@
               ↻ Retrain Letter Model
             </button>
             <div class="train-note">
-              Run in terminal: <code>python src/train_own_letter_model.py</code>
+              Terminal: <code>python src/train_own_letter_model.py</code>
             </div>
           </div>
-
           <div class="train-card">
             <div class="train-card-title">🤟 Word Model</div>
-            <div class="train-card-sub">Trained on your hand · ISL words</div>
+            <div class="train-card-sub">
+              Trained on your hand · ISL daily phrases
+            </div>
             <div class="word-chips" id="wordChips">Loading...</div>
             <button class="btn-train" onclick="runScript('word')">
               ↻ Retrain Word Model
             </button>
             <div class="train-note">
-              Run in terminal: <code>python src/train_own_word_model.py</code>
+              Terminal: <code>python src/train_own_word_model.py</code>
             </div>
           </div>
         </div>
